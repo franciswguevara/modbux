@@ -12,7 +12,7 @@ import {
   MAIN_SERVER_UUID,
   SERVER_ZUSTAND_STORAGE_KEY
 } from '@shared'
-import { stubRenderer } from './stubRenderer'
+import { recordApiCalls, stubRenderer } from './stubRenderer'
 
 /** A blob with one server holding one register, so `init` has a sync to make. */
 const persisted = (): string =>
@@ -77,7 +77,7 @@ const rejectChannel = (method: string): void => {
   ) as never
 }
 
-/** Waits out `init`, which runs from module scope with nothing awaiting it. */
+/** Waits out pending IPC promises when checking that import starts no server. */
 const settle = async (): Promise<void> => {
   for (let i = 0; i < 20; i++) await Promise.resolve()
 }
@@ -89,11 +89,25 @@ beforeEach(() => {
   localStorage.setItem(SERVER_ZUSTAND_STORAGE_KEY, persisted())
 })
 
+describe('importing the server store', () => {
+  it('does not start a server from persisted settings', async () => {
+    const calls: Parameters<typeof recordApiCalls>[0] = []
+    recordApiCalls(calls)
+    const { useServerZustand } = await import('../server.zustand')
+    await settle()
+
+    expect(calls.map((call) => call.method)).not.toContain('createServer')
+    expect(calls.map((call) => call.method)).not.toContain('startRtuServer')
+    expect(useServerZustand.getState().initialized).toBe(false)
+    expect(useServerZustand.getState().ready[MAIN_SERVER_UUID]).toBe(false)
+  })
+})
+
 describe('the flag the server view draws on', () => {
   it('is set once init has run', async () => {
     stubCreateServer(502)
     const { useServerZustand } = await import('../server.zustand')
-    await settle()
+    await useServerZustand.getState().init()
 
     expect(useServerZustand.getState().initialized).toBe(true)
     expect(useServerZustand.getState().ready[MAIN_SERVER_UUID]).toBe(true)
@@ -103,7 +117,7 @@ describe('the flag the server view draws on', () => {
     stubCreateServer(502)
     rejectChannel('syncServerRegister')
     const { useServerZustand } = await import('../server.zustand')
-    await settle()
+    await useServerZustand.getState().init()
 
     expect(useServerZustand.getState().initialized).toBe(true)
     // The uuid is the one that is not ready, which is what the three setters
@@ -114,7 +128,7 @@ describe('the flag the server view draws on', () => {
   it('is set when creating the server fails outright', async () => {
     rejectChannel('createServer')
     const { useServerZustand } = await import('../server.zustand')
-    await settle()
+    await useServerZustand.getState().init()
 
     expect(useServerZustand.getState().initialized).toBe(true)
   })
@@ -167,7 +181,7 @@ describe('one server main refuses', () => {
     const created: string[] = []
     refuseTheFirstSync(created)
     const { useServerZustand } = await import('../server.zustand')
-    await settle()
+    await useServerZustand.getState().init()
 
     expect(created).toEqual([MAIN_SERVER_UUID, SECOND])
     expect(useServerZustand.getState().ready[MAIN_SERVER_UUID]).toBe(false)
