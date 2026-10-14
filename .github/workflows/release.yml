@@ -83,6 +83,30 @@ jobs:
           yarn ${{ matrix.script }} ${{ matrix.targets }} --publish never ||
             { sleep 15; yarn ${{ matrix.script }} ${{ matrix.targets }} --publish never; }
 
+      # Verify the delivered DMGs, including the copy users install.
+      - name: Verify macOS installer signatures
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          verification_dir=$(mktemp -d)
+          mount_point="$verification_dir/mounted"
+          mkdir "$mount_point"
+          cleanup() {
+            hdiutil detach "$mount_point" >/dev/null 2>&1 || true
+            rm -rf "$verification_dir"
+          }
+          trap cleanup EXIT
+          for installer in dist/*.dmg; do
+            hdiutil verify "$installer"
+            hdiutil attach "$installer" -readonly -nobrowse -mountpoint "$mount_point"
+            codesign --verify --deep --strict --verbose=2 "$mount_point/Modbux.app"
+            ditto "$mount_point/Modbux.app" "$verification_dir/Modbux.app"
+            codesign --verify --deep --strict --verbose=2 "$verification_dir/Modbux.app"
+            codesign --display --verbose=2 "$verification_dir/Modbux.app"
+            hdiutil detach "$mount_point"
+            rm -rf "$verification_dir/Modbux.app"
+          done
+
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.name }}
