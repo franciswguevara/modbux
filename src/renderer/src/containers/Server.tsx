@@ -42,10 +42,13 @@ const Server = meme(() => {
   useEffect(() => {
     if (serverInitializationStarted) return
     serverInitializationStarted = true
-    void useServerZustand.getState().init().catch((error) => {
-      serverInitializationStarted = false
-      console.error('Initializing Modbus server after opening Server view failed:', error)
-    })
+    void useServerZustand
+      .getState()
+      .init()
+      .catch((error) => {
+        serverInitializationStarted = false
+        console.error('Initializing Modbus server after opening Server view failed:', error)
+      })
   }, [])
 
   // `initialized` rather than `ready`, which is per uuid and written only on a
