@@ -55,11 +55,6 @@ const stubCreateServer = (): void => {
   })
 }
 
-/** Waits out `init`, which runs from module scope with nothing awaiting it. */
-const settle = async (): Promise<void> => {
-  for (let i = 0; i < 10; i++) await Promise.resolve()
-}
-
 const portsAskedFor = (calls: ApiCall[]): unknown[] =>
   calls.filter((call) => call.method === 'createServer').map((call) => call.payload)
 
@@ -77,7 +72,7 @@ describe('a server whose port is no port', () => {
     recordApiCalls(calls)
 
     const { useServerZustand } = await import('../server.zustand')
-    await settle()
+    await useServerZustand.getState().init()
 
     expect(portsAskedFor(calls)).toEqual([{ uuid: 'u', port: 502 }])
     expect(useServerZustand.getState().servers.u?.port).toBe('502')
@@ -95,7 +90,7 @@ describe('a server whose port is no port', () => {
     recordApiCalls(calls)
 
     const { useServerZustand } = await import('../server.zustand')
-    await settle()
+    await useServerZustand.getState().init()
 
     expect(portsAskedFor(calls)).toEqual([
       { uuid: 'first', port: 502 },
@@ -113,7 +108,7 @@ describe('a server whose port is one', () => {
     recordApiCalls(calls)
 
     const { useServerZustand } = await import('../server.zustand')
-    await settle()
+    await useServerZustand.getState().init()
 
     expect(portsAskedFor(calls)).toEqual([{ uuid: 'u', port: 5021 }])
     expect(useServerZustand.getState().servers.u?.port).toBe('5021')
