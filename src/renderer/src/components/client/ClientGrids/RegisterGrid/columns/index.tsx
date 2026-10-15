@@ -7,6 +7,7 @@ import { bitColumn } from './bit'
 import { dataTypeColumn } from './dataType'
 import { scalingFactorColumn } from './scalingFactor'
 import { hexColumn } from './hex'
+import { textColumn } from './text'
 import { binaryColumn } from './binary'
 import { valueColumn } from './value'
 import { commentColumn } from './comment'
@@ -52,6 +53,7 @@ const useRegisterGridColumns = (): GridColDef<RegisterData>[] => {
         interpolationColumn(type),
         groupEndColumn(registerMap),
         hexColumn,
+        textColumn,
         binaryColumn
       )
     }

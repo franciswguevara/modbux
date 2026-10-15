@@ -47,3 +47,9 @@ Review the existing source and packaged artifacts separately. There is **no inde
 ## Limitations
 
 The change blocks the **identified** application-level background GitHub request and automatic Server startup. A restrictive renderer CSP is defense in depth but does **not** constrain the main process, OS, dependencies, manually opened external browser, or direct Node TCP connections. No static review can promise that the application or a published binary will **never** connect to an external endpoint. An independent test of the packaged application and IT network restrictions remain necessary.
+
+## Register text preview
+
+The Client results table includes **Text (ASCII)** beside **HEX** for holding and input registers, without changing the selected data type. Each row decodes its own two bytes in the same order as HEX: `4849` shows `HI`. Spaces are preserved; non-printable and non-ASCII bytes are shown as `\xNN` (for example, `4100` shows `A\x00`). Literal backslashes are doubled to distinguish them from byte escapes. Failed reads leave this preview blank.
+
+This is a read-only display conversion and sends no additional requests. It does not infer that a numeric register is text, join adjacent registers, or apply the numeric 32/64-bit word-order setting. For a model name or other longer string, select the existing `utf8` data type at its starting register and configure the intended read range. Confirm the device's text encoding and byte order against its register documentation before interpreting the result.
