@@ -124,7 +124,8 @@ mac:
   entitlementsInherit: build/entitlements.mac.plist
   hardenedRuntime: true
   gatekeeperAssess: false
-  identity: null
+  # Ad-hoc signing seals test bundles; this is not Developer ID notarization.
+  identity: '-'
   extendInfo:
     NSCameraUsageDescription: Application requests access to the device's camera.
     NSMicrophoneUsageDescription: Application requests access to the device's microphone.

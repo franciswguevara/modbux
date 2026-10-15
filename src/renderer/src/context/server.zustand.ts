@@ -730,8 +730,8 @@ const repairFromTheKey = (): void => {
 
 repairFromTheKey()
 
-// Init server
-useServerZustand.getState().init()
+// Do not start a listening Modbus server during ordinary app startup.
+// The Server view explicitly initializes it when the user chooses Server mode.
 
 const delayedBool = new ServerDelayedSetter<boolean, SetBoolParameters>({
   maxCount: 250,

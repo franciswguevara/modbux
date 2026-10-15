@@ -10,7 +10,7 @@ import Fade from '@mui/material/Fade'
 import Box from '@mui/material/Box'
 import ServerGrid from '@renderer/components/server/ServerGrid/ServerGrid'
 import PrivilegedPortModal from '@renderer/components/server/PrivilegedPortModal/PrivilegedPortModal'
-import { ChangeEvent, useCallback } from 'react'
+import { ChangeEvent, useCallback, useEffect } from 'react'
 
 const ServerName = meme(() => {
   const name = useServerZustand((z) => z.servers[z.selectedUuid]?.name ?? '')
@@ -34,7 +34,23 @@ const ServerName = meme(() => {
   )
 })
 
+// Each renderer window explicitly starts its server only after the Server view opens.
+// Avoid duplicate binds when React StrictMode re-runs effects or the view re-mounts.
+let serverInitializationStarted = false
+
 const Server = meme(() => {
+  useEffect(() => {
+    if (serverInitializationStarted) return
+    serverInitializationStarted = true
+    void useServerZustand
+      .getState()
+      .init()
+      .catch((error) => {
+        serverInitializationStarted = false
+        console.error('Initializing Modbus server after opening Server view failed:', error)
+      })
+  }, [])
+
   // `initialized` rather than `ready`, which is per uuid and written only on a
   // sync that got through: one rejected invoke in `init`'s loop left this view
   // blank on that launch and every one after it.
